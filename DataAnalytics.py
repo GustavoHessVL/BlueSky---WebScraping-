@@ -7,109 +7,109 @@ from selenium.webdriver.common.by import By
 from selenium import webdriver
 from bs4 import BeautifulSoup as bs
 import requests
+
+# Send an HTTP request to the Bluesky profile URL
 response = requests.get('https://bsky.app/profile/nytimes.com')
 print(response)
 
+# Set up custom headers to mimic a browser request
 header = {
-    'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15'}
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36'
+}
 
+# Send a second request with custom headers
 response = requests.get('https://bsky.app/profile/nytimes.com', headers=header)
 print(response)
 
-
+# Example cookies for the request
 cookies = {
     'AWSALB': 'fueERgSwBSzAPX/OHUdsfquSGXd/rnkUXjal+TCYydWqZsCC/S9yRcIZCFnc2v4q4QcNOXY2pS3nNmU6jWt53l3tcgiQ4mGqaEXFeSgkNIQFeRh7RgmqXCFNCyzN',
     'AWSALBCORS': 'fueERgSwBSzAPX/OHUdsfquSGXd/rnkUXjal+TCYydWqZsCC/S9yRcIZCFnc2v4q4QcNOXY2pS3nNmU6jWt53l3tcgiQ4mGqaEXFeSgkNIQFeRh7RgmqXCFNCyzN',
 }
 
+# Custom headers for additional requests
 headers = {
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,/;q=0.8',
     'Sec-Fetch-Site': 'same-origin',
-    # 'Cookie': 'AWSALB=fueERgSwBSzAPX/OHUdsfquSGXd/rnkUXjal+TCYydWqZsCC/S9yRcIZCFnc2v4q4QcNOXY2pS3nNmU6jWt53l3tcgiQ4mGqaEXFeSgkNIQFeRh7RgmqXCFNCyzN; AWSALBCORS=fueERgSwBSzAPX/OHUdsfquSGXd/rnkUXjal+TCYydWqZsCC/S9yRcIZCFnc2v4q4QcNOXY2pS3nNmU6jWt53l3tcgiQ4mGqaEXFeSgkNIQFeRh7RgmqXCFNCyzN',
     'Sec-Fetch-Dest': 'document',
     'Accept-Language': 'en-US,en;q=0.9',
     'Sec-Fetch-Mode': 'navigate',
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15',
-    # 'Accept-Encoding': 'gzip, deflate, br',
     'Referer': 'https://bsky.social/',
     'Priority': 'u=0, i',
 }
 
+# Send another request with cookies and headers
 response = requests.get(
     'https://bsky.app/profile/nytimes.com', cookies=cookies, headers=headers)
 
-
+# Parse the HTML content of the response
 soup = bs(response.text)
 print(soup)
 
-
-# Caminho para o ChromeDriver
-# Substitua pelo caminho correto
+# Path to ChromeDriver (replace with the correct path for your system)
 chrome_driver_path = "/usr/local/bin/chromedriver"
 service = Service(chrome_driver_path)
 
-# Inicializar o WebDriver do Chrome
+# Initialize the Chrome WebDriver
 options = webdriver.ChromeOptions()
-options.add_argument("--headless")  # Opcional: rodar sem interface gráfica
+options.add_argument("--headless")  # Optional: run without a graphical interface
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
 driver = webdriver.Chrome(service=service, options=options)
 
-# URL da página de perfil no Bluesky
+# URL of the Bluesky profile page
 url = "https://bsky.app/profile/nytimes.com"
 driver.get(url)
 
-# Esperar o carregamento inicial
+# Wait for the initial page load
 time.sleep(5)
 
-# Função para realizar scrolling na página e carregar mais postagens
-
-
+# Function to scroll down the page and load more posts
 def scroll_and_load(driver, scroll_times=10, delay=2):
     action = ActionChains(driver)
     for _ in range(scroll_times):
-        driver.execute_script("window.scrollBy(0, 1000);")  # Scroll para baixo
+        driver.execute_script("window.scrollBy(0, 1000);")  # Scroll down
         time.sleep(delay)
 
-
-# Realizar scrolling para carregar mais postagens
+# Perform scrolling to load more posts
 scroll_and_load(driver, scroll_times=10, delay=2)
 
-# Obter o HTML renderizado
+# Get the rendered HTML content
 html = driver.page_source
 soup = BeautifulSoup(html, "html.parser")
 
-# Lista para armazenar as postagens
-posts_list = []
+# List to store extracted posts
+data_list = []
 
-# Encontrar todas as postagens
-# Classe geral das postagens
+# Locate all post elements on the page
+# General class for post elements
 posts = soup.find_all("div", class_="css-175oi2r")
 
+# Extract data from each post
 for post in posts:
     try:
-        # Extrair o título
+        # Extract the title
         title_element = post.find(
             "div", class_="css-146c3p1 r-8akbws r-krxsd3 r-dnmrzs r-1udh08x r-1udbk01")
         title = title_element.text.strip() if title_element else None
 
-        # Extrair o número de likes
+        # Extract the number of likes
         likes_element = post.find("div", {"data-testid": "likeCount"})
         likes = int(likes_element.text.strip()) if likes_element else 0
 
-        # Extrair a quantidade de comentários
+        # Extract the number of comments
         comment_count_element = post.find("div", {"data-testid": "replyBtn"})
-        comment_count = int(comment_count_element.text.strip()
-                            ) if comment_count_element else 0
+        comment_count = int(comment_count_element.text.strip()) if comment_count_element else 0
 
-        # Extrair os textos dos comentários
+        # Extract the text of comments
         comments = []
         comment_elements = post.find_all(
             "div", {"data-word-wrap": "1", "class": "css-146c3p1 r-1xnzce8"})
         for comment in comment_elements:
             comments.append(comment.text.strip())
 
-        # Criar um dicionário para a postagem
+        # Create a dictionary to represent the post data
         post_data = {
             "title": title,
             "likes": likes,
@@ -117,20 +117,20 @@ for post in posts:
             "comments": comments
         }
 
-        # Adicionar à lista de postagens
-        posts_list.append(post_data)
+        # Add the post data to the list
+        data_list.append(post_data)
 
     except Exception as e:
-        print(f"Erro ao processar uma postagem: {e}")
+        print(f"Error processing a post: {e}")
 
-# Fechar o navegador
+# Close the browser
 driver.quit()
 
-# Exibir as postagens coletadas
-for post in posts_list:
+# Display the collected posts
+for post in data_list:
     print(post)
 
-# Opcional: Salvar os dados em um arquivo CSV
-df = pd.DataFrame(posts_list)
+# Optional: Save the data to a CSV file
+df = pd.DataFrame(data_list)
 df.to_csv("bluesky_posts.csv", index=False, encoding="utf-8")
-print("Dados salvos em 'bluesky_posts.csv'")
+print("Data saved to 'bluesky_posts.csv'")
